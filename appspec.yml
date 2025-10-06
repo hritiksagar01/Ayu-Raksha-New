@@ -1,5 +1,15 @@
 version: 0.0
 os: linux
+
 files:
   - source: /
-    destination: /var/www/html
+    destination: /var/www/ayu-raksha-frontend
+
+permissions:
+  - object: /var/www/ayu-raksha-frontend
+    owner: ubuntu
+    group: ubuntu
+    mode: 755
+    type:
+      - directory
+      - file
