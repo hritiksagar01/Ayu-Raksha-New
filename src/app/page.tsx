@@ -52,7 +52,6 @@ export default function EntryPage() {
     return (
       <LoadingSpinner 
         isOverlay 
-        text={translations.loadingText?.[selectedLanguage]} 
       />
     );
   }

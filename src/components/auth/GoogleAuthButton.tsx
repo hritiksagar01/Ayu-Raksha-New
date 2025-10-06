@@ -5,9 +5,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Chrome } from 'lucide-react';
 
+interface GoogleAuthResponse {
+  name: string;
+  email: string;
+  picture: string;
+  sub: string;
+}
+
 interface GoogleAuthButtonProps {
-  onSuccess: (response: any) => void;
-  onError?: (error: any) => void;
+  onSuccess: (response: GoogleAuthResponse) => void;
+  onError?: (error: unknown) => void;
   disabled?: boolean;
   text?: string;
 }

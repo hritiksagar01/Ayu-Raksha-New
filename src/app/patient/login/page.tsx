@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -111,9 +111,9 @@ export default function PatientLoginPage() {
           description: response.error || t('loginError', 'Invalid email or password'),
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Login Error:', err);
-      const errorMsg = err.response?.data?.error || 'An error occurred. Please try again.';
+      const errorMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'An error occurred. Please try again.';
       setError(errorMsg);
       toast({
         variant: 'destructive',
@@ -164,7 +164,7 @@ export default function PatientLoginPage() {
           })
           .finally(() => setProcessing(false));
       }, 1500);
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Error',

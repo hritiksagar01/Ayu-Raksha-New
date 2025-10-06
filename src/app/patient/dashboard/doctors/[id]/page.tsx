@@ -151,19 +151,19 @@ export default function DoctorProfilePage() {
                 <div className="border-b pb-3">
                   <StarRating rating={5} />
                   <p className="text-gray-600 mt-1 text-sm">
-                    "Excellent care and very professional."
+                    {'"'}Excellent care and very professional.{'"'}
                   </p>
                 </div>
                 <div className="border-b pb-3">
                   <StarRating rating={4} />
                   <p className="text-gray-600 mt-1 text-sm">
-                    "Good experience, helpful staff."
+                    {'"'}Good experience, helpful staff.{'"'}
                   </p>
                 </div>
                 <div>
                   <StarRating rating={5} />
                   <p className="text-gray-600 mt-1 text-sm">
-                    "Highly recommended!"
+                    {'"'}Highly recommended!{'"'}
                   </p>
                 </div>
               </div>

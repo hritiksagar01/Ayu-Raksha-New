@@ -1,9 +1,9 @@
 // src/app/patient/dashboard/chatbot/page.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Mic, Sparkles } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,8 +21,8 @@ export default function ChatbotPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const t = (key: string, fallback?: string) =>
-    getTranslation(translations, key, selectedLanguage, fallback);
+  const t = useCallback((key: string, fallback?: string) =>
+    getTranslation(translations, key, selectedLanguage, fallback), [selectedLanguage]);
 
   useEffect(() => {
     const welcomeMessage: ChatMessage = {
@@ -32,14 +32,14 @@ export default function ChatbotPage() {
       timestamp: new Date(),
     };
     setMessages([welcomeMessage]);
-  }, [selectedLanguage]);
+  }, [selectedLanguage, t]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAiTyping]);
 
   // Mock AI response (replace with real API call)
-  const callAI = async (prompt: string): Promise<string> => {
+  const callAI = async (): Promise<string> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const responses = [
@@ -68,7 +68,7 @@ export default function ChatbotPage() {
     setInputValue('');
     setIsAiTyping(true);
 
-    const aiResponseText = await callAI(inputValue);
+    const aiResponseText = await callAI();
 
     const aiMessage: ChatMessage = {
       id: Date.now() + 1,

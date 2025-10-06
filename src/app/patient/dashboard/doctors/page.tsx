@@ -34,7 +34,8 @@ export default function FindDoctorsPage() {
     getTranslation(translations, key, selectedLanguage, fallback);
 
   useEffect(() => {
-    let filtered = mockDoctors.filter((item) => {
+    // ✅ Changed 'let' to 'const'
+    const filtered = mockDoctors.filter((item) => {
       const nameMatch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const specialtyMatch = item.specialty.toLowerCase().includes(searchTerm.toLowerCase());
       const termMatch = nameMatch || specialtyMatch;

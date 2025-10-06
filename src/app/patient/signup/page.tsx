@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -105,7 +105,7 @@ export default function PatientSignupPage() {
           })
           .finally(() => setProcessing(false));
       }, 1500);
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -141,9 +141,9 @@ export default function PatientSignupPage() {
           description: response.error || 'Signup failed',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Signup Error:', err);
-      const errorMsg = err.response?.data?.error || 'An error occurred. Please try again.';
+      const errorMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'An error occurred. Please try again.';
       setError(errorMsg);
       toast({
         variant: 'destructive',
@@ -307,7 +307,7 @@ export default function PatientSignupPage() {
                   <div className="grid gap-2">
                     <Label htmlFor="gender">{t('gender', 'Gender (Optional)')}</Label>
                     <Select
-                      onValueChange={(value) => form.setValue('gender', value as any)}
+                      onValueChange={(value) => form.setValue('gender', value as 'male' | 'female' | 'other')}
                       disabled={isProcessing}
                     >
                       <SelectTrigger id="gender">

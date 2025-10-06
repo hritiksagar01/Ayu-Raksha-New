@@ -51,7 +51,7 @@ export const useStore = create<StoreState>()(
       },
       
       clearUser: () => {
-        Cookies.remove('jwt_token');
+        Cookies.remove('auth_token'); // ✅ Changed from jwt_token
         Cookies.remove('user');
         set({ user: null, isAuthenticated: false });
       },
@@ -65,8 +65,11 @@ export const useStore = create<StoreState>()(
     {
       name: 'ayu-raksha-storage',
       storage: createJSONStorage(() => localStorage),
-      partialPersist: (state) => ({
+      // ✅ Use 'partialize' instead of 'partialPersist'
+      partialize: (state) => ({
         selectedLanguage: state.selectedLanguage,
+        user: state.user, // ✅ Also persist user
+        isAuthenticated: state.isAuthenticated, // ✅ Also persist auth state
       }),
     }
   )

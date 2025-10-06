@@ -28,15 +28,6 @@ interface NavItem {
   translationKey: string;
 }
 
-const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/patient/dashboard', icon: Home, translationKey: 'dashboard' },
-  { name: 'Timeline', href: '/patient/dashboard/timeline', icon: Calendar, translationKey: 'timeline' },
-  { name: 'Alerts', href: '/patient/dashboard/alerts', icon: Bell, translationKey: 'alerts' },
-  { name: 'Find Doctors', href: '/patient/dashboard/doctors', icon: Users, translationKey: 'findDoctors' },
-  { name: 'Chatbot', href: '/patient/dashboard/chatbot', icon: MessageSquare, translationKey: 'chatbot' },
-  { name: 'Reports', href: '/patient/dashboard/reports', icon: FileText, translationKey: 'reports' },
-];
-
 export default function PatientDashboardLayout({
   children,
 }: {

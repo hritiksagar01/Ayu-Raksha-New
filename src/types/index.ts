@@ -25,8 +25,15 @@ export interface Patient extends User {
 
 export interface Doctor extends User {
   type: 'doctor';
-  specialization?: string;
-  licenseNumber?: string;
+  specialty: string;
+  rating: number;
+  distance: string;
+  location: string;
+  phone: string;
+  email: string;
+  address: string;
+  about: string;
+  services: string[];
 }
 
 export interface Uploader extends User {
@@ -64,14 +71,21 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+// ✅ UNIFIED MedicalRecord interface
 export interface MedicalRecord {
   id: string;
-  patientId: string;
+  type: 'Prescription' | 'Blood Report' | 'Scan' | 'Consultation';
   date: string;
-  diagnosis: string;
+  doctor: string;
+  clinic: string;
+  findings: string;
+  status: 'Normal' | 'Reviewed' | 'Attention Required' | 'Critical';
+  // Optional fields for backend compatibility
+  patientId?: string;
+  diagnosis?: string;
   prescription?: string;
-  doctorId: string;
-  doctorName: string;
+  doctorId?: string;
+  doctorName?: string;
 }
 
 export interface Appointment {
@@ -84,16 +98,16 @@ export interface Appointment {
   reason: string;
 }
 
-// ✅ FIX: Add index signature with proper typing
 export interface TranslationValue {
   English: string;
   Hindi: string;
-  [key: string]: string; // Allow any string key
+  [key: string]: string;
 }
 
 export interface Translations {
   [key: string]: TranslationValue;
 }
+
 export interface Alert {
   id: string;
   type: 'High Risk' | 'Guidance' | 'Advisory';
@@ -112,32 +126,9 @@ export interface Alert {
   date: string;
 }
 
-export interface MedicalRecord {
-  id: string;
-  type: 'Prescription' | 'Blood Report' | 'Scan' | 'Consultation';
-  date: string;
-  doctor: string;
-  clinic: string;
-  findings: string;
-  status: 'Normal' | 'Reviewed';
-}export interface ChatMessage {
+export interface ChatMessage {
   id: number;
   text: string;
   sender: 'user' | 'ai';
   timestamp?: Date;
-}
-
-export interface Doctor {
-  id: string;
-  name: string;
-  type: 'doctor';
-  specialty: string;
-  rating: number;
-  distance: string;
-  location: string;
-  phone: string;
-  email: string;
-  address: string;
-  about: string;
-  services: string[];
 }

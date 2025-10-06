@@ -35,6 +35,7 @@ import { signupSchema, type SignupFormData } from '@/lib/validations/signup';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { getTranslation } from '@/lib/translations';
 
 export default function PatientSignupPage() {
   const router = useRouter();
@@ -101,7 +102,7 @@ export default function PatientSignupPage() {
           })
           .finally(() => setProcessing(false));
       }, 1500);
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -133,8 +134,8 @@ export default function PatientSignupPage() {
           description: response.error || 'Signup failed',
         });
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'An error occurred. Please try again.';
+    } catch (err: unknown) {
+      const errorMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'An error occurred. Please try again.';
       setError(errorMsg);
       toast({
         variant: 'destructive',
@@ -290,7 +291,7 @@ export default function PatientSignupPage() {
                   <div className="grid gap-2">
                     <Label htmlFor="gender">{t('gender', 'Gender')}</Label>
                     <Select
-                      onValueChange={(value) => form.setValue('gender', value as any)}
+                      onValueChange={(value) => form.setValue('gender', value as 'male' | 'female' | 'other')}
                       disabled={isProcessing}
                     >
                       <SelectTrigger id="gender">
