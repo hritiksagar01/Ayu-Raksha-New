@@ -6,7 +6,7 @@ export const mockRecords: MedicalRecord[] = [
   {
     id: 'rec-1',
     type: 'Blood Report',
-    date: '2025-10-05',
+    date: '2024-10-05',
     doctor: 'Dr. Rajesh Sharma',
     clinic: 'City Hospital, Delhi',
     findings: 'All parameters within normal range. Hemoglobin: 14.2 g/dL, WBC: 7500/μL, Blood Glucose: 95 mg/dL (Fasting)',
