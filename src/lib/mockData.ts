@@ -64,7 +64,7 @@ export const mockAlerts: Alert[] = [
       Hindi: 'आपका हाल का रक्तचाप सामान्य सीमा से अधिक है।',
     },
     details: {
-      English: 'Your blood pressure reading of 135/88 mmHg is slightly elevated. Normal blood pressure is below 120/80 mmHg. Please consult your doctor and follow prescribed medication. Monitor your blood pressure regularly and maintain a healthy lifestyle.',
+      English: 'Your bloood pressure reading of 135/88 mmHg is slightly elevated. Normal blood pressure is below 120/80 mmHg. Please consult your doctor and follow prescribed medication. Monitor your blood pressure regularly and maintain a healthy lifestyle.',
       Hindi: 'आपका रक्तचाप 135/88 mmHg है जो थोड़ा बढ़ा हुआ है। सामान्य रक्तचाप 120/80 mmHg से नीचे होता है। कृपया अपने डॉक्टर से परामर्श करें और निर्धारित दवा लें। नियमित रूप से अपने रक्तचाप की निगरानी करें और स्वस्थ जीवनशैली बनाए रखें।',
     },
   },
