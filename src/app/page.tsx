@@ -68,7 +68,7 @@ export default function EntryPage() {
             selectedLanguage={selectedLanguage} 
           />
 
-          {/* Portal Cards */}
+         
           <section className={PAGE_STYLES.portalGrid}>
             {PORTALS.map((portal) => (
               <PortalCard

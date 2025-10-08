@@ -81,7 +81,6 @@ export default function PatientDashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
         <h1 className="text-3xl font-bold text-gray-900">
           {t('welcomeBack', 'Welcome back')}, {user?.name || 'Patient'}! 👋
