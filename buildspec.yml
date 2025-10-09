@@ -33,15 +33,21 @@ phases:
 
 artifacts:
   files:
-    - '.next/**/*'
+    - 'pages/**/*'
+    - 'app/**/*'
+    - 'components/**/*'
+    - 'utils/**/*'
     - 'public/**/*'
+    - '.next/**/*'
     - 'package.json'
     - 'package-lock.json'
+    - 'next.config.js'
     - 'next.config.mjs'
     - 'appspec.yml'
     - 'scripts/**/*'
   name: ayu-raksha-frontend-build
   discard-paths: no
+
 
 cache:
   paths:
