@@ -1,4 +1,4 @@
-// src/app/patient/login/page.tsx
+// src/app/uploader/login/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,9 +30,9 @@ import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const portalConfig = PORTAL_CONFIGS.patient;
+const portalConfig = PORTAL_CONFIGS.uploader;
 
-export default function PatientLoginPage() {
+export default function UploaderLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { selectedLanguage, setUser, setProcessing, isProcessing } = useStore();
@@ -76,7 +76,7 @@ export default function PatientLoginPage() {
   }, [setValue]);
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log('🔐 Login Form Data:', data);
+    console.log('🔐 Uploader Login Form Data:', data);
     
     setError('');
     setProcessing(true);
@@ -95,9 +95,9 @@ export default function PatientLoginPage() {
         portalConfig.id
       );
 
-      console.log('✅ Login Response:', response);
+      console.log('✅ Uploader Login Response:', response);
 
-      if (response.success) {
+      if (response.success && response.data?.user) {
         setUser(response.data.user);
 
         toast({
@@ -107,7 +107,7 @@ export default function PatientLoginPage() {
 
         if (data.rememberMe) {
           localStorage.setItem('rememberMe', 'true');
-          localStorage.setItem('email', data.email);  // ✅ Changed to email
+          localStorage.setItem('email', data.email);
         } else {
           localStorage.removeItem('rememberMe');
           localStorage.removeItem('email');
@@ -124,7 +124,7 @@ export default function PatientLoginPage() {
         });
       }
     } catch (err: unknown) {
-      console.error('❌ Login Error:', err);
+      console.error('❌ Uploader Login Error:', err);
       const errorMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'An error occurred. Please try again.';
       setError(errorMsg);
       toast({
@@ -142,8 +142,8 @@ export default function PatientLoginPage() {
     try {
       setTimeout(() => {
         const mockGoogleResponse = {
-          name: 'Krishna Kumar',
-          email: 'krishna@gmail.com',
+          name: 'Medical Records Admin',
+          email: 'uploader@hospital.com',
           picture: 'https://via.placeholder.com/150',
           sub: 'google_' + Date.now(),
         };
@@ -159,7 +159,7 @@ export default function PatientLoginPage() {
             portalConfig.id
           )
           .then((response) => {
-            if (response.success) {
+            if (response.success && response.data?.user) {
               setUser(response.data.user);
               toast({
                 title: t('loginSuccess', 'Login successful!'),
@@ -204,7 +204,7 @@ export default function PatientLoginPage() {
               {t('loginToAccount', 'Login to your account')}
             </CardTitle>
             <CardDescription className="text-center">
-              {t('loginDescription', 'Enter your credentials to access your account')}
+              {t('uploaderLoginDescription', 'Access the medical records upload system')}
             </CardDescription>
             <div className="text-center">
               <Button
@@ -219,11 +219,11 @@ export default function PatientLoginPage() {
 
           <CardContent>
             {/* Demo Credentials Info */}
-            <Alert className="mb-4 bg-blue-50 border-blue-200">
-              <AlertDescription className="text-blue-800 text-sm">
+            <Alert className="mb-4 bg-purple-50 border-purple-200">
+              <AlertDescription className="text-purple-800 text-sm">
                 <div className="space-y-1">
                   <p className="font-semibold">Demo Credentials:</p>
-                  <p><strong>Email:</strong> hritik.srivastava15@gmail.com</p>
+                  <p><strong>Email:</strong> uploader@demo.com</p>
                   <p><strong>Password:</strong> 12345678</p>
                 </div>
               </AlertDescription>
@@ -237,7 +237,7 @@ export default function PatientLoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="patient@demo.com"
+                    placeholder="uploader@hospital.com"
                     {...register('email')}
                     disabled={isProcessing}
                     autoComplete="email"
@@ -307,7 +307,7 @@ export default function PatientLoginPage() {
                 {/* Submit button */}
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-purple-600 hover:bg-purple-700"
                   disabled={isProcessing}
                 >
                   {isProcessing ? t('loggingIn', 'Logging in...') : t('login', 'Login')}

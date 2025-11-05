@@ -1,7 +1,7 @@
 // src/app/patient/dashboard/alerts/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Info, Bell, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,14 @@ import { translations } from '@/constants/translations';
 import { getTranslation } from '@/lib/translations';
 import { mockAlerts } from '@/lib/mockData';
 import { format } from 'date-fns';
+import { patientApi } from '@/lib/api';
+import type { Alert as AlertType } from '@/types';
 
 export default function PatientAlertsPage() {
-  const { selectedLanguage } = useStore();
+  const { selectedLanguage, user } = useStore();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<AlertType[]>(mockAlerts);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const t = (key: string, fallback?: string) =>
     getTranslation(translations, key, selectedLanguage, fallback);
@@ -52,6 +56,46 @@ export default function PatientAlertsPage() {
     }
   };
 
+  useEffect(() => {
+    async function fetchAlerts() {
+      try {
+        setLoading(true);
+        if (!user?.patientCode) {
+          setAlerts(mockAlerts);
+          return;
+        }
+        const res = await patientApi.getAlerts(user.patientCode);
+        if (res.success && Array.isArray(res.data)) {
+          const mapped: AlertType[] = res.data.map((a: any) => ({
+            id: String(a.id ?? Math.random()),
+            type: (a.type as AlertType['type']) || 'Advisory',
+            title: {
+              English: a.title || a.summary || 'Alert',
+              Hindi: a.title || a.summary || 'Alert',
+            },
+            summary: {
+              English: a.summary || a.details || '',
+              Hindi: a.summary || a.details || '',
+            },
+            details: {
+              English: a.details || a.summary || '',
+              Hindi: a.details || a.summary || '',
+            },
+            date: a.date || a.createdAt || new Date().toISOString(),
+          }));
+          setAlerts(mapped);
+        } else {
+          setAlerts(mockAlerts);
+        }
+      } catch {
+        setAlerts(mockAlerts);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAlerts();
+  }, [user?.patientCode]);
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -63,7 +107,13 @@ export default function PatientAlertsPage() {
         </p>
       </div>
 
-      {mockAlerts.length === 0 ? (
+      {loading ? (
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="text-gray-500">{t('loading', 'Loading...')}</p>
+          </CardContent>
+        </Card>
+      ) : alerts.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center">
             <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -72,7 +122,7 @@ export default function PatientAlertsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {mockAlerts.map((alert) => {
+          {alerts.map((alert) => {
             const styles = getAlertStyles(alert.type);
             const Icon = styles.icon;
             const isExpanded = expandedId === alert.id;

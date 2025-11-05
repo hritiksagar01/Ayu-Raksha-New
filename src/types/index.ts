@@ -12,6 +12,8 @@ export interface User {
   phone?: string;
   avatar?: string;
   createdAt?: string;
+  // Optional 12-digit identifier provided by backend for patients
+  patientCode?: string;
 }
 
 export interface Patient extends User {
@@ -86,6 +88,10 @@ export interface MedicalRecord {
   prescription?: string;
   doctorId?: string;
   doctorName?: string;
+  fileUrl?: string;
+  filename?: string;
+  size?: number;
+  fileKey?: string;
 }
 
 export interface Appointment {

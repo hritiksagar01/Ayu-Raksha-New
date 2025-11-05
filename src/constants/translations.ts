@@ -528,6 +528,418 @@ export const translations = {
     English: 'Invalid username or password',
     Hindi: 'अमान्य उपयोगकर्ता नाम या पासवर्ड',
   },
+  
+  // Uploader Portal Translations
+  uploaderLoginDescription: {
+    English: 'Access the medical records upload system',
+    Hindi: 'चिकित्सा रिकॉर्ड अपलोड सिस्टम तक पहुंचें',
+  },
+  createUploaderAccount: {
+    English: 'Create Uploader Account',
+    Hindi: 'अपलोडर खाता बनाएं',
+  },
+  uploaderSignupDescription: {
+    English: 'Register to upload and manage medical records',
+    Hindi: 'चिकित्सा रिकॉर्ड अपलोड और प्रबंधित करने के लिए पंजीकरण करें',
+  },
+  phoneNumber: {
+    English: 'Phone Number',
+    Hindi: 'फोन नंबर',
+  },
+  facilityInformation: {
+    English: 'Facility Information',
+    Hindi: 'सुविधा जानकारी',
+  },
+  facilityName: {
+    English: 'Facility/Hospital Name',
+    Hindi: 'सुविधा/अस्पताल का नाम',
+  },
+  facilityType: {
+    English: 'Facility Type',
+    Hindi: 'सुविधा प्रकार',
+  },
+  selectFacilityType: {
+    English: 'Select facility type',
+    Hindi: 'सुविधा प्रकार चुनें',
+  },
+  hospital: {
+    English: 'Hospital',
+    Hindi: 'अस्पताल',
+  },
+  diagnosticCenter: {
+    English: 'Diagnostic Center',
+    Hindi: 'निदान केंद्र',
+  },
+  laboratory: {
+    English: 'Laboratory',
+    Hindi: 'प्रयोगशाला',
+  },
+  pharmacy: {
+    English: 'Pharmacy',
+    Hindi: 'फार्मेसी',
+  },
+  facilityAddress: {
+    English: 'Facility Address',
+    Hindi: 'सुविधा का पता',
+  },
+  creatingAccount: {
+    English: 'Creating Account...',
+    Hindi: 'खाता बनाया जा रहा है...',
+  },
+  iAccept: {
+    English: 'I accept the',
+    Hindi: 'मैं स्वीकार करता हूं',
+  },
+  
+  // Uploader Dashboard
+  uploaderWelcome: {
+    English: 'Welcome',
+    Hindi: 'स्वागत है',
+  },
+  uploaderDashboardSubtitle: {
+    English: 'Manage and upload medical records efficiently',
+    Hindi: 'चिकित्सा रिकॉर्ड को कुशलता से प्रबंधित और अपलोड करें',
+  },
+  totalUploads: {
+    English: 'Total Uploads',
+    Hindi: 'कुल अपलोड',
+  },
+  allTimeUploads: {
+    English: 'All time uploads',
+    Hindi: 'सभी समय के अपलोड',
+  },
+  pendingApprovals: {
+    English: 'Pending Approvals',
+    Hindi: 'लंबित अनुमोदन',
+  },
+  awaitingAuthorization: {
+    English: 'Awaiting authorization',
+    Hindi: 'प्राधिकरण की प्रतीक्षा में',
+  },
+  thisMonth: {
+    English: 'This Month',
+    Hindi: 'इस महीने',
+  },
+  uploadedThisMonth: {
+    English: 'Uploaded this month',
+    Hindi: 'इस महीने अपलोड किया गया',
+  },
+  uploadNewDocument: {
+    English: 'Upload New Document',
+    Hindi: 'नया दस्तावेज़ अपलोड करें',
+  },
+  uploadDocumentDesc: {
+    English: 'Upload medical records for patients',
+    Hindi: 'रोगियों के लिए चिकित्सा रिकॉर्ड अपलोड करें',
+  },
+  startUpload: {
+    English: 'Start Upload',
+    Hindi: 'अपलोड शुरू करें',
+  },
+  uploadHistory: {
+    English: 'Upload History',
+    Hindi: 'अपलोड इतिहास',
+  },
+  uploadHistoryDesc: {
+    English: 'View all uploaded records and their status',
+    Hindi: 'सभी अपलोड किए गए रिकॉर्ड और उनकी स्थिति देखें',
+  },
+  viewHistory: {
+    English: 'View History',
+    Hindi: 'इतिहास देखें',
+  },
+  recentUploadsTitle: {
+    English: 'Recent Uploads',
+    Hindi: 'हालिया अपलोड',
+  },
+  recentUploadsDesc: {
+    English: 'Your most recent document uploads',
+    Hindi: 'आपके सबसे हालिया दस्तावेज़ अपलोड',
+  },
+  patientIdHeader: {
+    English: 'Patient ID',
+    Hindi: 'रोगी आईडी',
+  },
+  patientNameHeader: {
+    English: 'Patient Name',
+    Hindi: 'रोगी का नाम',
+  },
+  docTypeHeader: {
+    English: 'Document Type',
+    Hindi: 'दस्तावेज़ प्रकार',
+  },
+  uploadDateHeader: {
+    English: 'Upload Date',
+    Hindi: 'अपलोड तिथि',
+  },
+  statusHeader: {
+    English: 'Status',
+    Hindi: 'स्थिति',
+  },
+  statusPending: {
+    English: 'Pending',
+    Hindi: 'लंबित',
+  },
+  statusAuthorized: {
+    English: 'Authorized',
+    Hindi: 'अधिकृत',
+  },
+  viewAllUploads: {
+    English: 'View All Uploads',
+    Hindi: 'सभी अपलोड देखें',
+  },
+  
+  // Upload Page Translations
+  uploadMedicalDocument: {
+    English: 'Upload Medical Document',
+    Hindi: 'चिकित्सा दस्तावेज़ अपलोड करें',
+  },
+  uploadDocumentDescription: {
+    English: 'Upload patient medical records securely to the system',
+    Hindi: 'रोगी चिकित्सा रिकॉर्ड को सुरक्षित रूप से सिस्टम में अपलोड करें',
+  },
+  documentUploadForm: {
+    English: 'Document Upload Form',
+    Hindi: 'दस्तावेज़ अपलोड फ़ॉर्म',
+  },
+  fillDetailsBelow: {
+    English: 'Fill in the patient details and upload the document',
+    Hindi: 'रोगी विवरण भरें और दस्तावेज़ अपलोड करें',
+  },
+  step1: {
+    English: 'Step 1',
+    Hindi: 'चरण 1',
+  },
+  step2: {
+    English: 'Step 2',
+    Hindi: 'चरण 2',
+  },
+  step3: {
+    English: 'Step 3',
+    Hindi: 'चरण 3',
+  },
+  verifyPatient: {
+    English: 'Verify Patient',
+    Hindi: 'रोगी सत्यापित करें',
+  },
+  enter16DigitId: {
+    English: 'Enter 16-digit Patient ID',
+    Hindi: '16 अंकों की रोगी आईडी दर्ज करें',
+  },
+  samplePatientIds: {
+    English: 'Sample Patient IDs for testing',
+    Hindi: 'परीक्षण के लिए नमूना रोगी आईडी',
+  },
+  verify: {
+    English: 'Verify',
+    Hindi: 'सत्यापित करें',
+  },
+  invalidPatientId: {
+    English: 'Please enter a valid 16-digit Patient ID',
+    Hindi: 'कृपया एक वैध 16 अंकों की रोगी आईडी दर्ज करें',
+  },
+  patientVerified: {
+    English: 'Patient verified',
+    Hindi: 'रोगी सत्यापित',
+  },
+  patientNotFound: {
+    English: 'Patient not found. Please check the ID.',
+    Hindi: 'रोगी नहीं मिला। कृपया आईडी जांचें।',
+  },
+  name: {
+    English: 'Name',
+    Hindi: 'नाम',
+  },
+  age: {
+    English: 'Age',
+    Hindi: 'आयु',
+  },
+  selectDocumentType: {
+    English: 'Select Document Type',
+    Hindi: 'दस्तावेज़ प्रकार चुनें',
+  },
+  chooseDocumentType: {
+    English: 'Choose document type',
+    Hindi: 'दस्तावेज़ प्रकार चुनें',
+  },
+  mriScan: {
+    English: 'MRI Scan',
+    Hindi: 'एमआरआई स्कैन',
+  },
+  xRay: {
+    English: 'X-Ray',
+    Hindi: 'एक्स-रे',
+  },
+  ctScan: {
+    English: 'CT Scan',
+    Hindi: 'सीटी स्कैन',
+  },
+  pathologyReport: {
+    English: 'Pathology Report',
+    Hindi: 'पैथोलॉजी रिपोर्ट',
+  },
+  ultrasound: {
+    English: 'Ultrasound',
+    Hindi: 'अल्ट्रासाउंड',
+  },
+  ecg: {
+    English: 'ECG Report',
+    Hindi: 'ईसीजी रिपोर्ट',
+  },
+  uploadDocument: {
+    English: 'Upload Document',
+    Hindi: 'दस्तावेज़ अपलोड करें',
+  },
+  dragDropFile: {
+    English: 'Drag and drop your file here, or click to browse',
+    Hindi: 'अपनी फ़ाइल यहाँ खींचें और छोड़ें, या ब्राउज़ करने के लिए क्लिक करें',
+  },
+  supportedFormats: {
+    English: 'Supported formats: JPG, PNG, PDF (Max 10MB)',
+    Hindi: 'समर्थित प्रारूप: JPG, PNG, PDF (अधिकतम 10MB)',
+  },
+  invalidFileType: {
+    English: 'Invalid file type',
+    Hindi: 'अमान्य फ़ाइल प्रकार',
+  },
+  onlyImagesAndPDF: {
+    English: 'Only JPG, PNG, and PDF files are allowed',
+    Hindi: 'केवल JPG, PNG, और PDF फ़ाइलों की अनुमति है',
+  },
+  fileTooLarge: {
+    English: 'File too large',
+    Hindi: 'फ़ाइल बहुत बड़ी है',
+  },
+  maxFileSize: {
+    English: 'Maximum file size is 10MB',
+    Hindi: 'अधिकतम फ़ाइल आकार 10MB है',
+  },
+  verificationRequired: {
+    English: 'Verification Required',
+    Hindi: 'सत्यापन आवश्यक',
+  },
+  verifyPatientFirst: {
+    English: 'Please verify the patient ID first',
+    Hindi: 'कृपया पहले रोगी आईडी सत्यापित करें',
+  },
+  documentTypeRequired: {
+    English: 'Document Type Required',
+    Hindi: 'दस्तावेज़ प्रकार आवश्यक',
+  },
+  fileRequired: {
+    English: 'File Required',
+    Hindi: 'फ़ाइल आवश्यक',
+  },
+  selectFileToUpload: {
+    English: 'Please select a file to upload',
+    Hindi: 'कृपया अपलोड करने के लिए एक फ़ाइल चुनें',
+  },
+  uploading: {
+    English: 'Uploading...',
+    Hindi: 'अपलोड हो रहा है...',
+  },
+  uploadSuccess: {
+    English: 'File uploaded successfully!',
+    Hindi: 'फ़ाइल सफलतापूर्वक अपलोड की गई!',
+  },
+  success: {
+    English: 'Success!',
+    Hindi: 'सफलता!',
+  },
+  fileUploadedSuccessfully: {
+    English: 'Medical document uploaded successfully',
+    Hindi: 'चिकित्सा दस्तावेज़ सफलतापूर्वक अपलोड किया गया',
+  },
+  uploadFailed: {
+    English: 'Upload failed. Please try again.',
+    Hindi: 'अपलोड विफल रहा। कृपया पुनः प्रयास करें।',
+  },
+  uploadError: {
+    English: 'Upload Error',
+    Hindi: 'अपलोड त्रुटि',
+  },
+  cancel: {
+    English: 'Cancel',
+    Hindi: 'रद्द करें',
+  },
+  verifying: {
+    English: 'Verifying...',
+    Hindi: 'सत्यापित हो रहा है...',
+  },
+  enterPatientId: {
+    English: 'Enter Patient ID',
+    Hindi: 'रोगी आईडी दर्ज करें',
+  },
+  verificationError: {
+    English: 'Error verifying patient. Please try again.',
+    Hindi: 'रोगी सत्यापित करने में त्रुटि। कृपया पुनः प्रयास करें।',
+  },
+  
+  // Upload History Page
+  viewAllUploadedDocuments: {
+    English: 'View all uploaded medical documents and their status',
+    Hindi: 'सभी अपलोड किए गए चिकित्सा दस्तावेज़ और उनकी स्थिति देखें',
+  },
+  documentHistory: {
+    English: 'Document History',
+    Hindi: 'दस्तावेज़ इतिहास',
+  },
+  totalDocuments: {
+    English: 'Total',
+    Hindi: 'कुल',
+  },
+  documents: {
+    English: 'documents',
+    Hindi: 'दस्तावेज़',
+  },
+  searchByPatientOrDocument: {
+    English: 'Search by patient name, ID, or document...',
+    Hindi: 'रोगी नाम, आईडी, या दस्तावेज़ द्वारा खोजें...',
+  },
+  uploadDate: {
+    English: 'Upload Date',
+    Hindi: 'अपलोड तिथि',
+  },
+  patientName: {
+    English: 'Patient Name',
+    Hindi: 'रोगी का नाम',
+  },
+  patientId: {
+    English: 'Patient ID',
+    Hindi: 'रोगी आईडी',
+  },
+  documentType: {
+    English: 'Document Type',
+    Hindi: 'दस्तावेज़ प्रकार',
+  },
+  fileName: {
+    English: 'File Name',
+    Hindi: 'फ़ाइल नाम',
+  },
+  fileSize: {
+    English: 'Size',
+    Hindi: 'आकार',
+  },
+  status: {
+    English: 'Status',
+    Hindi: 'स्थिति',
+  },
+  actions: {
+    English: 'Actions',
+    Hindi: 'कार्रवाई',
+  },
+  viewDocument: {
+    English: 'View Document',
+    Hindi: 'दस्तावेज़ देखें',
+  },
+  downloadDocument: {
+    English: 'Download Document',
+    Hindi: 'दस्तावेज़ डाउनलोड करें',
+  },
+  noDocumentsFound: {
+    English: 'No documents found matching your search',
+    Hindi: 'आपकी खोज से मेल खाने वाले कोई दस्तावेज़ नहीं मिले',
+  },
  
 };
     

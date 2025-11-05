@@ -22,35 +22,71 @@ import { getTranslation } from '@/lib/translations';
 import { mockRecords } from '@/lib/mockData';
 import { format } from 'date-fns';
 import type { MedicalRecord } from '@/types';
+import { patientApi } from '@/lib/api';
 
 export default function PatientTimelinePage() {
   const router = useRouter();
-  const { selectedLanguage } = useStore();
+  const { selectedLanguage, user } = useStore();
   const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>(mockRecords);
   const [filterType, setFilterType] = useState('All');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const t = (key: string, fallback?: string) =>
     getTranslation(translations, key, selectedLanguage, fallback);
 
   useEffect(() => {
-    let records = [...mockRecords];
-
-    if (filterType !== 'All') {
-      records = records.filter((record) => record.type === filterType);
+    async function fetchRecords() {
+      try {
+        setLoading(true);
+        if (!user?.patientCode) {
+          // Until patientCode is present, show mock
+          let records = [...mockRecords];
+          setFilteredRecords(applyLocalFilters(records));
+          return;
+        }
+        const params: any = { limit: 50 };
+        if (filterType !== 'All') params.type = filterType;
+        if (fromDate) params.from = fromDate;
+        if (toDate) params.to = toDate;
+        const res = await patientApi.listRecords(user.patientCode, params);
+        if (res.success && Array.isArray(res.data)) {
+          // Map backend records into MedicalRecord shape if needed
+          const mapped: MedicalRecord[] = res.data.map((r: any) => ({
+            id: String(r.id ?? r.key ?? Math.random()),
+            type: r.type || 'Prescription',
+            date: r.date || r.createdAt || new Date().toISOString(),
+            doctor: r.doctor || r.doctorName || '—',
+            clinic: r.clinic || r.facility || '',
+            findings: r.findings || r.summary || '',
+            status: r.status || 'Reviewed',
+            fileUrl: r.fileUrl || r.url,
+            filename: r.filename,
+            size: r.size,
+            fileKey: r.fileKey || r.key,
+          }));
+          setFilteredRecords(mapped);
+        } else {
+          setFilteredRecords(applyLocalFilters([...mockRecords]));
+        }
+      } catch {
+        setFilteredRecords(applyLocalFilters([...mockRecords]));
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchRecords();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, fromDate, toDate, user?.patientCode]);
 
-    if (fromDate) {
-      records = records.filter((record) => new Date(record.date) >= new Date(fromDate));
-    }
-
-    if (toDate) {
-      records = records.filter((record) => new Date(record.date) <= new Date(toDate));
-    }
-
-    setFilteredRecords(records);
-  }, [filterType, fromDate, toDate]);
+  function applyLocalFilters(records: MedicalRecord[]) {
+    let list = [...records];
+    if (filterType !== 'All') list = list.filter(r => r.type === filterType);
+    if (fromDate) list = list.filter(r => new Date(r.date) >= new Date(fromDate));
+    if (toDate) list = list.filter(r => new Date(r.date) <= new Date(toDate));
+    return list;
+  }
 
   const getRecordIcon = (type: string) => {
     switch (type) {
@@ -66,6 +102,8 @@ export default function PatientTimelinePage() {
         return { icon: FileText, color: 'text-gray-600', bg: 'bg-gray-500' };
     }
   };
+
+  // Type inference fallback no longer required since backend now maps S3 files into records
 
   return (
     <div className="p-6 space-y-6">
@@ -123,7 +161,9 @@ export default function PatientTimelinePage() {
 
       {/* Timeline */}
       <div className="space-y-4">
-        {filteredRecords.length > 0 ? (
+        {loading ? (
+          <Card><CardContent className="py-10 text-center"><p className="text-gray-500">{t('loading', 'Loading...')}</p></CardContent></Card>
+        ) : filteredRecords.length > 0 ? (
           filteredRecords.map((record) => {
             const iconConfig = getRecordIcon(record.type);
             const Icon = iconConfig.icon;

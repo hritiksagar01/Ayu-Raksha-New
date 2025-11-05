@@ -1,4 +1,4 @@
-// src/app/patient/signup/page.tsx
+// src/app/uploader/signup/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -31,15 +31,15 @@ import { useStore } from '@/lib/store';
 import { authApi } from '@/lib/api';
 import { translations } from '@/constants/translations';
 import { getTranslation } from '@/lib/translations';
-import { patientSignupSchema, type PatientSignupFormData } from '@/lib/validations/auth'; // ✅ Updated import
+import { uploaderSignupSchema, type UploaderSignupFormData } from '@/lib/validations/auth';
 import { PORTAL_CONFIGS } from '@/config/portals.config';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const portalConfig = PORTAL_CONFIGS.patient;
+const portalConfig = PORTAL_CONFIGS.uploader;
 
-export default function PatientSignupPage() {
+export default function UploaderSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { selectedLanguage, setUser, setProcessing, isProcessing } = useStore();
@@ -52,8 +52,8 @@ export default function PatientSignupPage() {
 
   const Icon = portalConfig.icon;
 
-  const form = useForm<PatientSignupFormData>({
-    resolver: zodResolver(patientSignupSchema),
+  const form = useForm<UploaderSignupFormData>({
+    resolver: zodResolver(uploaderSignupSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     shouldFocusError: false,
@@ -63,8 +63,9 @@ export default function PatientSignupPage() {
       password: '',
       confirmPassword: '',
       phone: '',
-      dateOfBirth: '',
-      gender: undefined,
+      facilityName: '',
+      facilityType: '',
+      facilityAddress: '',
       acceptTerms: false,
     },
   });
@@ -74,8 +75,8 @@ export default function PatientSignupPage() {
     try {
       setTimeout(() => {
         const mockGoogleResponse = {
-          name: 'Test User',
-          email: 'test@gmail.com',
+          name: 'Medical Records Admin',
+          email: 'admin@hospital.com',
           picture: 'https://via.placeholder.com/150',
           sub: 'google_' + Date.now(),
         };
@@ -91,7 +92,7 @@ export default function PatientSignupPage() {
             portalConfig.id
           )
           .then((response) => {
-            if (response.success) {
+            if (response.success && response.data?.user) {
               setUser(response.data.user);
               toast({
                 title: 'Success!',
@@ -118,8 +119,8 @@ export default function PatientSignupPage() {
     }
   };
 
-  const onSubmit = async (data: PatientSignupFormData) => {
-    console.log('📝 Signup Form Data:', data);
+  const onSubmit = async (data: UploaderSignupFormData) => {
+    console.log('📝 Uploader Signup Form Data:', data);
     
     setError('');
     setProcessing(true);
@@ -132,10 +133,9 @@ export default function PatientSignupPage() {
       // Use Supabase authentication
       const response = await authApi.supabaseSignup(data, portalConfig.id);
 
-      console.log('✅ Signup Response:', response);
+      console.log('✅ Uploader Signup Response:', response);
 
       if (response.success && response.data?.token) {
-        // Session available immediately (email confirmation disabled)
         setUser(response.data.user);
         toast({
           title: 'Success!',
@@ -143,12 +143,10 @@ export default function PatientSignupPage() {
         });
         setTimeout(() => router.push(portalConfig.dashboardRoute), 1500);
       } else if (response.success && !response.data?.token) {
-        // Email confirmation required
         toast({
           title: 'Check your email',
           description: 'We\'ve sent you a confirmation link. Click it to finish sign-in.',
         });
-        // Stay on page; the callback handler will complete sign-in when the user clicks the email link
       } else {
         setError(response.error || 'Signup failed');
         toast({
@@ -158,7 +156,7 @@ export default function PatientSignupPage() {
         });
       }
     } catch (err: unknown) {
-      console.error('❌ Signup Error:', err);
+      console.error('❌ Uploader Signup Error:', err);
       const errorMsg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'An error occurred. Please try again.';
       setError(errorMsg);
       toast({
@@ -186,10 +184,10 @@ export default function PatientSignupPage() {
               <Icon className={`w-10 h-10 ${portalConfig.iconColor}`} />
             </div>
             <CardTitle className="text-center text-2xl">
-              {t('createAccount', 'Create your account')}
+              {t('createUploaderAccount', 'Create Uploader Account')}
             </CardTitle>
             <CardDescription className="text-center">
-              {t('signupDescription', 'Enter your details below to create your account')}
+              {t('uploaderSignupDescription', 'Register to upload and manage medical records')}
             </CardDescription>
             <div className="text-center">
               <Button
@@ -226,7 +224,7 @@ export default function PatientSignupPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="uploader@hospital.com"
                     {...form.register('email')}
                     disabled={isProcessing}
                     autoComplete="email"
@@ -296,7 +294,7 @@ export default function PatientSignupPage() {
 
                 {/* Phone */}
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">{t('phone', 'Phone Number (Optional)')}</Label>
+                  <Label htmlFor="phone">{t('phoneNumber', 'Phone Number')}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -305,36 +303,58 @@ export default function PatientSignupPage() {
                     disabled={isProcessing}
                     autoComplete="tel"
                   />
+                  {form.formState.errors.phone && (
+                    <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
+                  )}
                 </div>
 
-                {/* Date of Birth & Gender */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="dateOfBirth">{t('dateOfBirth', 'Date of Birth (Optional)')}</Label>
+                {/* Facility Information Section */}
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-semibold mb-4">{t('facilityInformation', 'Facility Information')}</h3>
+                  
+                  {/* Facility Name */}
+                  <div className="grid gap-2 mb-4">
+                    <Label htmlFor="facilityName">{t('facilityName', 'Facility/Hospital Name')}</Label>
                     <Input
-                      id="dateOfBirth"
-                      type="date"
-                      {...form.register('dateOfBirth')}
+                      id="facilityName"
+                      placeholder="City General Hospital"
+                      {...form.register('facilityName')}
                       disabled={isProcessing}
-                      autoComplete="bday"
                     />
+                    {form.formState.errors.facilityName && (
+                      <p className="text-sm text-destructive">{form.formState.errors.facilityName.message}</p>
+                    )}
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="gender">{t('gender', 'Gender (Optional)')}</Label>
+                  {/* Facility Type */}
+                  <div className="grid gap-2 mb-4">
+                    <Label htmlFor="facilityType">{t('facilityType', 'Facility Type (Optional)')}</Label>
                     <Select
-                      onValueChange={(value: string) => form.setValue('gender', value as 'male' | 'female' | 'other')}
+                      onValueChange={(value: string) => form.setValue('facilityType', value)}
                       disabled={isProcessing}
                     >
-                      <SelectTrigger id="gender">
-                        <SelectValue placeholder="Select gender" />
+                      <SelectTrigger id="facilityType">
+                        <SelectValue placeholder={t('selectFacilityType', 'Select facility type')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">{t('male', 'Male')}</SelectItem>
-                        <SelectItem value="female">{t('female', 'Female')}</SelectItem>
-                        <SelectItem value="other">{t('other', 'Other')}</SelectItem>
+                        <SelectItem value="hospital">{t('hospital', 'Hospital')}</SelectItem>
+                        <SelectItem value="clinic">{t('clinic', 'Clinic')}</SelectItem>
+                        <SelectItem value="diagnostic_center">{t('diagnosticCenter', 'Diagnostic Center')}</SelectItem>
+                        <SelectItem value="laboratory">{t('laboratory', 'Laboratory')}</SelectItem>
+                        <SelectItem value="pharmacy">{t('pharmacy', 'Pharmacy')}</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Facility Address */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="facilityAddress">{t('facilityAddress', 'Facility Address (Optional)')}</Label>
+                    <Input
+                      id="facilityAddress"
+                      placeholder="123 Medical Plaza, City"
+                      {...form.register('facilityAddress')}
+                      disabled={isProcessing}
+                    />
                   </div>
                 </div>
 
@@ -366,10 +386,10 @@ export default function PatientSignupPage() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-purple-600 hover:bg-purple-700"
                   disabled={isProcessing}
                 >
-                  {isProcessing ? 'Creating Account...' : t('signup', 'Create Account')}
+                  {isProcessing ? t('creatingAccount', 'Creating Account...') : t('createAccount', 'Create Account')}
                 </Button>
               </div>
             </form>

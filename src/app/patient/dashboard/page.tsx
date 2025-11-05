@@ -1,6 +1,7 @@
 // src/app/patient/dashboard/page.tsx
-'use client';
+"use client";
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Activity, 
@@ -17,18 +18,151 @@ import { Badge } from '@/components/ui/badge';
 import { useStore } from '@/lib/store';
 import { translations } from '@/constants/translations';
 import { getTranslation } from '@/lib/translations';
+import { uploadApi, patientApi, authApi } from '@/lib/api';
+import { mockAlerts, mockRecords } from '@/lib/mockData';
+import { getPatientDisplayId } from '@/lib/utils';
 
 export default function PatientDashboardPage() {
   const router = useRouter();
-  const { selectedLanguage, user } = useStore();
+  const { selectedLanguage, user, setUser } = useStore();
+  const [reportsCount, setReportsCount] = useState<number>(0);
+  const [alertsCount, setAlertsCount] = useState<number>(0);
+  const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
+  const [latestRecordTitle, setLatestRecordTitle] = useState<string>(
+    'Blood Test Results Available'
+  );
+  const [latestRecordSummary, setLatestRecordSummary] = useState<string>(
+    getTranslation(translations, 'latestUpdateContent', selectedLanguage, 'Your recent blood test results are available. All parameters are within normal range.')
+  );
+  const [displayName, setDisplayName] = useState<string>(user?.name || 'Patient');
+  const [displayPatientId, setDisplayPatientId] = useState<string>(
+    user?.patientCode ? user.patientCode.padStart(12, '0').slice(-12) : getPatientDisplayId(user?.id)
+  );
 
   const t = (key: string, fallback?: string) =>
     getTranslation(translations, key, selectedLanguage, fallback);
 
+  // Keep display values in sync when user changes
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.name || 'Patient');
+      if (user.patientCode) {
+        setDisplayPatientId(user.patientCode.padStart(12, '0').slice(-12));
+      } else {
+        setDisplayPatientId(getPatientDisplayId(user.id));
+      }
+    }
+  }, [user]);
+
+  // Fetch dynamic counts where possible
+  useEffect(() => {
+    // Prefer backend aggregation endpoint if patientCode exists
+    async function fetchDashboard() {
+      try {
+        if (!user?.patientCode) return;
+        const res = await patientApi.getDashboard(user.patientCode);
+        if (res.success && res.data?.counts) {
+          setAppointmentsCount(res.data.counts.appointmentsUpcoming ?? 0);
+          setAlertsCount(res.data.counts.alertsActive ?? 0);
+          setReportsCount(res.data.counts.reportsRecent ?? 0);
+          if (res.data.latestRecord) {
+            setLatestRecordTitle(`${res.data.latestRecord.type} ${t('resultsAvailable', 'Update')}`);
+            if (res.data.latestRecord.findings && res.data.latestRecord.findings.length > 0) {
+              setLatestRecordSummary(res.data.latestRecord.findings.substring(0, 160) + '...');
+            }
+          }
+        }
+      } catch (e) {
+        // fall back handled below
+      }
+    }
+    fetchDashboard();
+    // If user not in store, try to fetch from backend using JWT
+    async function ensureUser() {
+      try {
+        if (!user) {
+          const me = await authApi.me();
+          if (me.success && me.data?.user) {
+            setUser(me.data.user);
+            setDisplayName(me.data.user.name || 'Patient');
+            const code = (me.data.user as any).patientCode as string | undefined;
+            if (code) {
+              setDisplayPatientId(code.padStart(12, '0').slice(-12));
+            } else {
+              setDisplayPatientId(getPatientDisplayId(me.data.user.id));
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    ensureUser();
+
+    // Alerts from mock (replace with API when available)
+    setAlertsCount(mockAlerts.length);
+
+    // Latest record from mock
+    if (mockRecords.length > 0) {
+      const latest = mockRecords[0];
+      setLatestRecordTitle(`${latest.type} Results Available`);
+      setLatestRecordSummary(latest.findings.substring(0, 160) + '...');
+    }
+
+    // Reports from upload API if backend available; fallback to mock
+    async function fetchReports() {
+      try {
+        const targetPatientCode = user?.patientCode;
+        if (targetPatientCode) {
+          const res = await uploadApi.listFiles(targetPatientCode);
+          if (res.success && Array.isArray(res.data)) {
+            setReportsCount(res.data.length);
+          } else {
+            setReportsCount(mockRecords.length);
+          }
+        } else if (user?.id) {
+          // Backend expects patientCode; if absent, fall back to mock until available
+          setReportsCount(mockRecords.length);
+        } else {
+          setReportsCount(mockRecords.length);
+        }
+      } catch {
+        setReportsCount(mockRecords.length);
+      }
+    }
+
+    // Appointments - no API yet; default 0 (or from timeline in future)
+    setAppointmentsCount(0);
+    fetchReports();
+    // Also try to verify patient and pick backend-provided name/id if present
+    async function fetchProfile() {
+      try {
+        if (!user) return;
+        const code = user.patientCode;
+        if (!code) return; // backend profile lookup requires patientCode
+        console.log('🔎 Fetching patient profile for patientCode', code);
+        const res = await patientApi.verifyPatient(code);
+        console.log('📥 Patient profile response', res);
+        if (res.success && res.data) {
+          const backendName = (res.data as any).name as string | undefined;
+          const backendPatientCode = (res.data as any).patientCode as string | undefined;
+          if (backendName) setDisplayName(backendName);
+          if (backendPatientCode && backendPatientCode.length >= 6) {
+            setDisplayPatientId(backendPatientCode.padStart(12, '0').slice(-12));
+          }
+        }
+      } catch {
+        // silently ignore, fallback already set
+      }
+    }
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.patientCode]);
+
   const stats = [
     {
       title: t('upcomingAppointments', 'Upcoming Appointments'),
-      value: '3',
+      value: String(appointmentsCount),
       icon: Calendar,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -36,7 +170,7 @@ export default function PatientDashboardPage() {
     },
     {
       title: t('activeAlerts', 'Active Alerts'),
-      value: '2',
+      value: String(alertsCount),
       icon: AlertTriangle,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
@@ -44,7 +178,7 @@ export default function PatientDashboardPage() {
     },
     {
       title: t('recentReports', 'Recent Reports'),
-      value: '5',
+      value: String(reportsCount),
       icon: FileText,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -83,7 +217,7 @@ export default function PatientDashboardPage() {
     <div className="p-6 space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
         <h1 className="text-3xl font-bold text-gray-900">
-          {t('welcomeBack', 'Welcome back')}, {user?.name || 'Patient'}! 👋
+          {t('welcomeBack', 'Welcome back')}, {displayName}! 👋
         </h1>
         <p className="text-gray-600 mt-2">
           {t('dashboardSubtitle', 'Here\'s your health overview for today')}
@@ -95,6 +229,9 @@ export default function PatientDashboardPage() {
             month: 'long', 
             day: 'numeric' 
           })}
+        </p>
+        <p className="text-sm text-gray-700 mt-1">
+          Patient ID: <span className="font-mono font-semibold">{displayPatientId}</span>
         </p>
       </div>
 
@@ -151,10 +288,10 @@ export default function PatientDashboardPage() {
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-semibold text-gray-900 mb-1">
-                    Blood Test Results Available
+                    {latestRecordTitle}
                   </h3>
                   <p className="text-gray-700 text-sm">
-                    {t('latestUpdateContent', 'Your recent blood test results are available. All parameters are within normal range.')}
+                    {latestRecordSummary}
                   </p>
                   <Badge className="mt-2 bg-green-500">Normal Range</Badge>
                 </div>

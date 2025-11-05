@@ -1,6 +1,7 @@
 // src/app/patient/dashboard/reports/page.tsx
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Activity, Stethoscope, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,10 +12,15 @@ import { translations } from '@/constants/translations';
 import { getTranslation } from '@/lib/translations';
 import { mockRecords } from '@/lib/mockData';
 import { format } from 'date-fns';
+import { patientApi } from '@/lib/api';
+import type { MedicalRecord } from '@/types';
 
 export default function PatientReportsPage() {
   const router = useRouter();
-  const { selectedLanguage } = useStore();
+  const { selectedLanguage, user } = useStore();
+  const [records, setRecords] = React.useState<MedicalRecord[]>(mockRecords);
+  const [loading, setLoading] = React.useState(false);
+  const [syncing, setSyncing] = React.useState(false);
 
   const t = (key: string, fallback?: string) =>
     getTranslation(translations, key, selectedLanguage, fallback);
@@ -34,6 +40,70 @@ export default function PatientReportsPage() {
     }
   };
 
+  React.useEffect(() => {
+    async function fetchReports() {
+      try {
+        setLoading(true);
+        if (!user?.patientCode) {
+          setRecords(mockRecords);
+          return;
+        }
+        const res = await patientApi.listRecords(user.patientCode, { limit: 50 });
+        if (res.success && Array.isArray(res.data)) {
+          const mapped: MedicalRecord[] = res.data.map((r: any) => ({
+            id: String(r.id ?? r.key ?? Math.random()),
+            type: r.type || 'Prescription',
+            date: r.date || r.createdAt || new Date().toISOString(),
+            doctor: r.doctor || r.doctorName || '—',
+            clinic: r.clinic || r.facility || '',
+            findings: r.findings || r.summary || '',
+            status: r.status || 'Reviewed',
+            fileUrl: r.fileUrl || r.url,
+            filename: r.filename,
+            size: r.size,
+            fileKey: r.fileKey || r.key,
+          }));
+          setRecords(mapped);
+        } else {
+          setRecords(mockRecords);
+        }
+      } catch {
+        setRecords(mockRecords);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchReports();
+  }, [user?.patientCode]);
+
+  async function handleSync() {
+    if (!user?.patientCode) return;
+    try {
+      setSyncing(true);
+      await patientApi.syncRecords(user.patientCode);
+      // Refetch after sync
+      const res = await patientApi.listRecords(user.patientCode, { limit: 50 });
+      if (res.success && Array.isArray(res.data)) {
+        const mapped: MedicalRecord[] = res.data.map((r: any) => ({
+          id: String(r.id ?? r.key ?? Math.random()),
+          type: r.type || 'Prescription',
+          date: r.date || r.createdAt || new Date().toISOString(),
+          doctor: r.doctor || r.doctorName || '—',
+          clinic: r.clinic || r.facility || '',
+          findings: r.findings || r.summary || '',
+          status: r.status || 'Reviewed',
+          fileUrl: r.fileUrl || r.url,
+          filename: r.filename,
+          size: r.size,
+          fileKey: r.fileKey || r.key,
+        }));
+        setRecords(mapped);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -45,8 +115,17 @@ export default function PatientReportsPage() {
         </p>
       </div>
 
+      <div className="flex items-center justify-between">
+        <div />
+        <Button variant="outline" disabled={!user?.patientCode || syncing} onClick={handleSync}>
+          {syncing ? t('syncing', 'Syncing...') : t('syncRecords', 'Sync Records')}
+        </Button>
+      </div>
+
       <div className="grid gap-4">
-        {mockRecords.map((record) => {
+        {loading ? (
+          <Card><CardContent className="py-10 text-center"><p className="text-gray-500">{t('loading', 'Loading...')}</p></CardContent></Card>
+        ) : records.map((record) => {
           const iconConfig = getRecordIcon(record.type);
           const Icon = iconConfig.icon;
 
@@ -89,7 +168,7 @@ export default function PatientReportsPage() {
         })}
       </div>
 
-      {mockRecords.length === 0 && (
+      {(!loading && records.length === 0) && (
         <Card>
           <CardContent className="py-10 text-center">
             <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />

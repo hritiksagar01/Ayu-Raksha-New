@@ -1,7 +1,7 @@
 // src/app/patient/dashboard/reports/[id]/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Download, Sparkles, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,15 +14,17 @@ import { translations } from '@/constants/translations';
 import { getTranslation } from '@/lib/translations';
 import { mockRecords } from '@/lib/mockData';
 import { format } from 'date-fns';
+import type { MedicalRecord } from '@/types';
+import { patientApi } from '@/lib/api';
 
 export default function ReportDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { selectedLanguage } = useStore();
+  const { selectedLanguage, user } = useStore();
   const [aiSummary, setAiSummary] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const report = mockRecords.find((r) => r.id === params.id);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [report, setReport] = useState<MedicalRecord | undefined>(undefined);
 
   const t = (key: string, fallback?: string) =>
     getTranslation(translations, key, selectedLanguage, fallback);
@@ -39,6 +41,56 @@ export default function ReportDetailPage() {
       setIsGenerating(false);
     }, 2000);
   };
+
+  useEffect(() => {
+    async function fetchRecord() {
+      try {
+        setLoading(true);
+        const id = String(params.id);
+        if (!user?.patientCode) {
+          setReport(mockRecords.find((r) => r.id === id));
+          return;
+        }
+        const res = await patientApi.listRecords(user.patientCode, { limit: 50 });
+        if (res.success && Array.isArray(res.data)) {
+          const mapped: MedicalRecord[] = res.data.map((r: any) => ({
+            id: String(r.id ?? r.key ?? Math.random()),
+            type: r.type || 'Prescription',
+            date: r.date || r.createdAt || new Date().toISOString(),
+            doctor: r.doctor || r.doctorName || '—',
+            clinic: r.clinic || r.facility || '',
+            findings: r.findings || r.summary || '',
+            status: r.status || 'Reviewed',
+            fileUrl: r.fileUrl || r.url,
+            filename: r.filename,
+            size: r.size,
+            fileKey: r.fileKey || r.key,
+          }));
+          setReport(mapped.find((r) => r.id === id));
+        } else {
+          setReport(mockRecords.find((r) => r.id === id));
+        }
+      } catch {
+        const id = String(params.id);
+        setReport(mockRecords.find((r) => r.id === id));
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRecord();
+  }, [params.id, user?.patientCode]);
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="text-gray-500">{t('loading', 'Loading...')}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!report) {
     return (
@@ -147,30 +199,50 @@ export default function ReportDetailPage() {
             </Alert>
           </div>
 
-          {/* Document Viewer Placeholder */}
+          {/* Document Viewer / Link */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-3">
               {t('document', 'Document')}
             </h2>
-            <div className="w-full h-96 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 font-semibold">
-                  {t('documentViewer', 'Document Viewer')}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {t('documentViewerPlaceholder', 'PDF/Image preview will appear here')}
-                </p>
+            {report.fileUrl ? (
+              <div className="w-full">
+                <div className="mb-3 text-sm text-gray-600">
+                  {report.filename || t('documentFile', 'Document File')}
+                </div>
+                <div className="w-full h-96 bg-gray-50 border rounded-lg overflow-hidden">
+                  <iframe title="document" src={report.fileUrl} className="w-full h-full" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="w-full h-96 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 font-semibold">
+                    {t('documentViewer', 'Document Viewer')}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {t('documentViewerPlaceholder', 'PDF/Image preview will appear here')}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
           <div className="flex justify-center">
-            <Button size="lg" className="w-full sm:w-auto">
-              <Download className="mr-2 h-5 w-5" />
-              {t('downloadReport', 'Download Report')}
-            </Button>
+            {report.fileUrl ? (
+              <a href={report.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex">
+                <Button size="lg" className="w-full sm:w-auto">
+                  <Download className="mr-2 h-5 w-5" />
+                  {t('downloadReport', 'Open/Download Report')}
+                </Button>
+              </a>
+            ) : (
+              <Button size="lg" className="w-full sm:w-auto" disabled>
+                <Download className="mr-2 h-5 w-5" />
+                {t('downloadReport', 'Download Report')}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

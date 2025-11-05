@@ -37,6 +37,23 @@ export default function EntryPage() {
     return () => clearTimeout(timer);
   }, [setLoading]);
 
+  // If Supabase redirected back with tokens in the URL, forward to the auth callback handler
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash || '';
+    const params = new URLSearchParams(window.location.search);
+    const lastPortal = localStorage.getItem('lastPortal');
+    if (hash.includes('access_token=')) {
+      const qp = lastPortal ? `?portal=${encodeURIComponent(lastPortal)}` : '';
+      router.replace(`/auth/callback${qp}${hash}`);
+    } else if (params.has('code')) {
+      // OAuth/PKCE code flow
+      const qs = params.toString();
+      const prefix = lastPortal ? `portal=${encodeURIComponent(lastPortal)}&` : '';
+      router.replace(`/auth/callback?${prefix}${qs}`);
+    }
+  }, [router]);
+
   // Navigation handlers
   const handlePortalLogin = (portalId: string) => {
     router.push(`/${portalId}/login`);
