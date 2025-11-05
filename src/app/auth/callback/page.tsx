@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { authApi } from '@/lib/api';
@@ -17,7 +17,17 @@ function parseHashParams(hash: string): Record<string, string> {
   return result;
 }
 
+// Split into a parent with Suspense and a child that uses useSearchParams,
+// to satisfy Next.js requirement for a Suspense boundary.
 export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-6"><LoadingSpinner isOverlay={false} text="Loading..." /></div>}>
+      <AuthCallbackContent />
+    </Suspense>
+  );
+}
+
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser, setProcessing, setLoading } = useStore();
@@ -27,14 +37,16 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function finishSignIn() {
       try {
-  // Ensure any global overlay spinners are cleared
-  setProcessing(false);
-  setLoading(false);
+        // Ensure any global overlay spinners are cleared
+        setProcessing(false);
+        setLoading(false);
+
         // Prefer explicit portal from query (more reliable than localStorage)
         const explicitPortal = searchParams.get('portal');
         if (explicitPortal && typeof window !== 'undefined') {
           localStorage.setItem('lastPortal', explicitPortal);
         }
+
         // 1) Extract tokens
         const hash = typeof window !== 'undefined' ? window.location.hash : '';
         const hashParams = parseHashParams(hash);
@@ -72,10 +84,10 @@ export default function AuthCallbackPage() {
         const email = userData.user?.email || '';
         const name = (userData.user?.user_metadata as any)?.name as string | undefined;
 
-  // 4) Determine portal (prefer explicit query, else lastPortal, else patient)
-  const lastPortal = typeof window !== 'undefined' ? localStorage.getItem('lastPortal') : null;
-  const userType = (explicitPortal as any) || (lastPortal as any) || 'patient';
-  setPortalHint(userType);
+        // 4) Determine portal (prefer explicit query, else lastPortal, else patient)
+        const lastPortal = typeof window !== 'undefined' ? localStorage.getItem('lastPortal') : null;
+        const userType = (explicitPortal as any) || (lastPortal as any) || 'patient';
+        setPortalHint(userType);
 
         // 5) Sync with backend to obtain JWT
         const sync = await authApi.syncWithSupabaseToken(accessToken, userType, { email, name });
@@ -85,7 +97,7 @@ export default function AuthCallbackPage() {
 
         // 6) Update store and redirect
         setUser(sync.data.user);
-  const nextRoute = userType === 'uploader' ? '/uploader/dashboard' : userType === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
+        const nextRoute = userType === 'uploader' ? '/uploader/dashboard' : userType === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
 
         // Clean up URL hash/query
         if (typeof window !== 'undefined') {
