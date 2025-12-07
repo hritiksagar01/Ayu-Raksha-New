@@ -7,7 +7,7 @@ export const translations = {
     Hindi: 'लोड हो रहा है...',
   },
   processingText: {
-    English: 'Proocessing...',
+    English: 'Processing...',
     Hindi: 'प्रसंस्करण...',
   },
   
