@@ -75,7 +75,7 @@ jobs:
             tar xzf /tmp/next-app.tar.gz -C /opt/ayu-raksha-frontend
 
             # Install runtime dependencies (no dev deps)
-            npm ci --omit=dev
+            /usr/bin/npm ci --omit=dev
 
             # Restart frontend service
             sudo systemctl daemon-reload
