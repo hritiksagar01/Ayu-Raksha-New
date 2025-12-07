@@ -30,12 +30,21 @@ jobs:
 
       - name: Create deploy artifact (tar)
         run: |
-          tar czf next-app.tar.gz \
-            .next \
-            package.json \
-            package-lock.json \
-            next.config.* \
-            public
+          set -e
+          FILES=".next package.json package-lock.json"
+
+          # Include next.config.* if any exist
+          if compgen -G "next.config.*" > /dev/null; then
+            FILES="$FILES $(compgen -G 'next.config.*')"
+          fi
+
+          # Include public/ only if it exists
+          if [ -d public ]; then
+            FILES="$FILES public"
+          fi
+
+          echo "Packaging: $FILES"
+          tar czf next-app.tar.gz $FILES
 
       - name: Prepare SSH key
         run: |
@@ -53,34 +62,26 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem next-app.tar.gz \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/next-app.tar.gz
 
-      - name: Deploy on EC2 and restart service
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            mkdir -p $REMOTE_DIR_TMP
-          EOF
-        env:
-          REMOTE_DIR_TMP: ${{ env.REMOTE_DIR }}
-
       - name: Extract and install on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
-            cd $REMOTE_DIR
-            # Clean old build (optional, but nice)
+            cd /opt/ayu-raksha-frontend
+
+            # Remove old build artifacts
             rm -rf .next
+
             # Extract new build
-            tar xzf /tmp/next-app.tar.gz -C $REMOTE_DIR
-            # Install runtime dependencies
+            tar xzf /tmp/next-app.tar.gz -C /opt/ayu-raksha-frontend
+
+            # Install runtime dependencies (no dev deps)
             npm ci --omit=dev
+
             # Restart frontend service
             sudo systemctl daemon-reload
-            sudo systemctl restart $SERVICE_NAME.service
-            sudo systemctl status $SERVICE_NAME.service --no-pager
+            sudo systemctl restart ayu-raksha-frontend.service
+            sudo systemctl status ayu-raksha-frontend.service --no-pager
           EOF
-        env:
-          REMOTE_DIR: ${{ env.REMOTE_DIR }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
 
       - name: Cleanup SSH key
         if: always()
