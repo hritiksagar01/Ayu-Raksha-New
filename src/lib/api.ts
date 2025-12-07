@@ -11,7 +11,7 @@ import type {
   UserType
 } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
