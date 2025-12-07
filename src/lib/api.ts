@@ -241,9 +241,10 @@ export const authApi = {
       }
 
       // Step 1: Sign up with Supabase
-      const redirectTo = typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback?portal=${userType}`
-        : undefined;
+      // Prefer an explicit public site URL (useful in production builds)
+      // Fallback to `window.location.origin` when running in the browser.
+      const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : undefined);
+      const redirectTo = siteOrigin ? `${siteOrigin.replace(/\/$/, '')}/auth/callback?portal=${userType}` : undefined;
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
