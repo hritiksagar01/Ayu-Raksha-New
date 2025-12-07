@@ -30,8 +30,19 @@ nvm alias default 20
 echo "Node version: $(node -v)"
 echo "NPM version: $(npm -v)"
 
-# --- Install dependencies ---
-npm install
+# --- Install dependencies (deterministic) ---
+npm ci
+
+# --- Export frontend environment variables (used at build time) ---
+# Use a relative API path so the browser uses the same origin and Nginx can proxy to the backend.
+export NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+# If deploy provides SITE_URL (e.g., http://13.201.93.117), export it as NEXT_PUBLIC_SITE_URL
+if [ -n "$SITE_URL" ]; then
+  export NEXT_PUBLIC_SITE_URL="$SITE_URL"
+fi
+
+echo "Building frontend with NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL"
+npm run build
 
 # --- Start app using PM2 ---
 if ! command -v pm2 &>/dev/null; then
@@ -39,6 +50,7 @@ if ! command -v pm2 &>/dev/null; then
 fi
 
 pm2 delete ayu-raksha-frontend || true
+# Start npm start under PM2; PM2 will capture the current environment variables
 pm2 start npm --name "ayu-raksha-frontend" -- start
 pm2 save
 
@@ -53,17 +65,26 @@ fi
 NGINX_CONF="/etc/nginx/sites-available/ayu-raksha-frontend"
 sudo bash -c "cat > $NGINX_CONF" <<EOL
 server {
-    listen 80;
-    server_name _;
+  listen 80;
+  server_name _;
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-    }
+  location /api/ {
+    proxy_pass http://localhost:8080/;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+  }
+
+  location / {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host \$host;
+    proxy_cache_bypass \$http_upgrade;
+  }
 }
 EOL
 
