@@ -46,64 +46,63 @@ apiClient.interceptors.request.use((config) => {
 
 export const authApi = {
   // Exchange a Supabase access token for a backend JWT
-  syncWithSupabaseToken: async (
-    accessToken: string,
-    userType: UserType,
-    extra?: Record<string, any>
-  ): Promise<ApiResponse<{ user: User; token: string }>> => {
-    try {
-      const payload = {
-        userType,
-        ...(extra || {}),
-      };
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[auth.sync] baseURL =', API_BASE_URL);
-        console.log('[auth.sync] sending Authorization: Bearer', accessToken?.slice(0, 12) + '...');
-      }
+ // Exchange a Supabase access token for a backend session (cookie) & user
+syncWithSupabaseToken: async (
+  accessToken: string,
+  userType: UserType,
+  extra?: Record<string, any>
+): Promise<ApiResponse<{ user: User; token: string }>> => {
+  try {
+    const payload = {
+      userType,
+      ...(extra || {}),
+    };
 
-      const syncResponse = await apiClient.post('/auth/sync', payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'X-Supabase-Token': accessToken,
-        },
-      });
-
-      let tokenData: string;
-      let userData: User;
-
-      if (syncResponse.data.data) {
-        tokenData = syncResponse.data.data.token;
-        userData = syncResponse.data.data.user;
-      } else if (syncResponse.data.token) {
-        tokenData = syncResponse.data.token;
-        userData = syncResponse.data.user;
-      } else {
-        throw new Error('Invalid sync response format');
-      }
-
-      Cookies.set('auth_token', tokenData, { expires: 7 });
-
-      return {
-        success: true,
-        data: {
-          token: tokenData,
-          user: userData,
-        },
-        message: 'Sync successful',
-      };
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError<ApiErrorResponse>;
-      return {
-        success: false,
-        data: { user: {} as User, token: '' },
-        error:
-          axiosError.response?.data?.message ||
-          axiosError.response?.data?.error ||
-          (error as Error).message ||
-          'Sync failed',
-      };
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[auth.sync] baseURL =', API_BASE_URL);
+      console.log('[auth.sync] sending Authorization: Bearer', accessToken?.slice(0, 12) + '...');
     }
-  },
+
+    const syncResponse = await apiClient.post('/auth/sync', payload, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Supabase-Token': accessToken,
+      },
+    });
+
+    let userData: User;
+
+    if (syncResponse.data?.data?.user) {
+      userData = syncResponse.data.data.user;
+    } else if (syncResponse.data?.user) {
+      userData = syncResponse.data.user;
+    } else {
+      throw new Error('Invalid sync response format: missing user');
+    }
+
+    // Backend has set HttpOnly auth_token cookie
+    return {
+      success: true,
+      data: {
+        token: accessToken,
+        user: userData,
+      },
+      message: 'Sync successful',
+    };
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    return {
+      success: false,
+      data: { user: {} as User, token: '' },
+      error:
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.error ||
+        (error as Error).message ||
+        'Sync failed',
+    };
+  }
+},
+
   // Fetch current user from backend using JWT in cookies/headers
   me: async (): Promise<ApiResponse<{ user: User }>> => {
     try {
@@ -141,212 +140,207 @@ export const authApi = {
     }
   },
   // Supabase Login (New primary method)
-  supabaseLogin: async (
-    credentials: LoginCredentials,
-    userType: UserType
-  ): Promise<ApiResponse<{ user: User; token: string }>> => {
-    try {
-      console.log('📤 Supabase Login Request:', credentials);
+  // Supabase Login (New primary method)
+supabaseLogin: async (
+  credentials: LoginCredentials,
+  userType: UserType
+): Promise<ApiResponse<{ user: User; token: string }>> => {
+  try {
+    console.log('📤 Supabase Login Request:', credentials);
 
-      // Check if Supabase is configured
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        throw new Error('Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file');
-      }
-
-      // Step 1: Sign in with Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (authError) {
-        console.error('❌ Supabase Auth Error:', authError);
-        throw new Error(authError.message);
-      }
-
-      if (!authData.session?.access_token) {
-        throw new Error('No access token received from Supabase');
-      }
-
-      console.log('✅ Supabase authentication successful');
-
-      // Step 2: Sync with backend using access token (send in Authorization header)
-      const syncResponse = await apiClient.post(
-        '/auth/sync',
-        {
-          userType: userType,
-          email: credentials.email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${authData.session.access_token}`,
-            'X-Supabase-Token': authData.session.access_token,
-          },
-        }
+    // Ensure Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      throw new Error(
+        'Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file'
       );
-
-      console.log('📥 Backend Sync Response:', syncResponse.data);
-
-      // Handle response
-      let tokenData: string;
-      let userData: User;
-
-      if (syncResponse.data.data) {
-        tokenData = syncResponse.data.data.token;
-        userData = syncResponse.data.data.user;
-      } else if (syncResponse.data.token) {
-        tokenData = syncResponse.data.token;
-        userData = syncResponse.data.user;
-      } else {
-        console.error('❌ Invalid sync response format:', syncResponse.data);
-        throw new Error('Invalid sync response format');
-      }
-
-      // Validate token before saving
-      if (!tokenData || tokenData === 'undefined' || typeof tokenData !== 'string') {
-        console.error('❌ Invalid token received:', tokenData);
-        throw new Error('Invalid token received from backend');
-      }
-
-      console.log('✅ Saving backend token to cookie (length:', tokenData.length, ')');
-      // Save backend token
-      Cookies.set('auth_token', tokenData, { expires: 7 });
-
-      return {
-        success: true,
-        data: {
-          token: tokenData,
-          user: userData,
-        },
-        message: 'Login successful',
-      };
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError<ApiErrorResponse>;
-      console.error('❌ Supabase Login Error:', error);
-
-      return {
-        success: false,
-        data: { user: {} as User, token: '' },
-        error: axiosError.response?.data?.message
-          || axiosError.response?.data?.error
-          || (error as Error).message
-          || 'Login failed',
-      };
     }
-  },
+
+    // 1️⃣ Login with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    if (authError) {
+      console.error('❌ Supabase Auth Error:', authError);
+      throw new Error(authError.message);
+    }
+
+    const accessToken = authData.session?.access_token;
+    if (!accessToken) {
+      throw new Error('No access token received from Supabase');
+    }
+
+    console.log('✅ Supabase authentication successful');
+
+    // 2️⃣ Sync with backend (backend will set HttpOnly auth_token cookie)
+    const syncResponse = await apiClient.post(
+      '/auth/sync',
+      {
+        userType,
+        email: credentials.email,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Supabase-Token': accessToken,
+        },
+      }
+    );
+
+    console.log('📥 Backend Sync Response:', syncResponse.data);
+
+    // 3️⃣ Extract user only (do NOT expect token from backend)
+    let userData: User;
+
+    if (syncResponse.data?.data?.user) {
+      userData = syncResponse.data.data.user;
+    } else if (syncResponse.data?.user) {
+      userData = syncResponse.data.user;
+    } else {
+      console.error('❌ Invalid sync response format:', syncResponse.data);
+      throw new Error('Invalid sync response format: missing user');
+    }
+
+    // ✅ At this point:
+    // - Backend has set the HttpOnly "auth_token" cookie
+    // - Supabase holds the access token on the client
+    // We return Supabase access token so caller can use it in client-side state if needed
+    return {
+      success: true,
+      data: {
+        token: accessToken,
+        user: userData,
+      },
+      message: 'Login successful',
+    };
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    console.error('❌ Supabase Login Error:', error);
+
+    return {
+      success: false,
+      data: { user: {} as User, token: '' },
+      error:
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.error ||
+        (error as Error).message ||
+        'Login failed',
+    };
+  }
+},
+
 
   // Supabase Signup
-  supabaseSignup: async (
-    data: SignupData,
-    userType: UserType
-  ): Promise<ApiResponse<{ user: User; token: string }>> => {
-    try {
-      console.log('📤 Supabase Signup Request:', data);
+ // Supabase Signup
+supabaseSignup: async (
+  data: SignupData,
+  userType: UserType
+): Promise<ApiResponse<{ user: User; token: string }>> => {
+  try {
+    console.log('📤 Supabase Signup Request:', data);
 
-      // Check if Supabase is configured
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        throw new Error('Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file');
-      }
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      throw new Error(
+        'Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file'
+      );
+    }
 
-      // Step 1: Sign up with Supabase
-      // Prefer an explicit public site URL (useful in production builds)
-      // Fallback to `window.location.origin` when running in the browser.
-      const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : undefined);
-      const redirectTo = siteOrigin ? `${siteOrigin.replace(/\/$/, '')}/auth/callback?portal=${userType}` : undefined;
+    const siteOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : undefined);
+    const redirectTo = siteOrigin
+      ? `${siteOrigin.replace(/\/$/, '')}/auth/callback?portal=${userType}`
+      : undefined;
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: redirectTo,
-          data: {
-            name: data.name,
-            phone: data.phone,
-          },
-        },
-      });
-
-      if (authError) {
-        console.error('❌ Supabase Signup Error:', authError);
-        throw new Error(authError.message);
-      }
-
-      if (!authData.session?.access_token) {
-        return {
-          success: true,
-          data: { user: {} as User, token: '' },
-          message: 'Please check your email to confirm your account',
-        };
-      }
-
-      console.log('✅ Supabase signup successful');
-
-      // Step 2: Sync with backend (send access token in Authorization header)
-      const syncResponse = await apiClient.post(
-        '/auth/sync',
-        {
-          userType: userType,
-          email: data.email,
+    // 1️⃣ Signup with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        emailRedirectTo: redirectTo,
+        data: {
           name: data.name,
           phone: data.phone,
-          dateOfBirth: data.dateOfBirth,
-          gender: data.gender,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${authData.session.access_token}`,
-            'X-Supabase-Token': authData.session.access_token,
-          },
-        }
-      );
+      },
+    });
 
-      console.log('📥 Backend Sync Response:', syncResponse.data);
+    if (authError) {
+      console.error('❌ Supabase Signup Error:', authError);
+      throw new Error(authError.message);
+    }
 
-      let tokenData: string;
-      let userData: User;
+    const accessToken = authData.session?.access_token;
 
-      if (syncResponse.data.data) {
-        tokenData = syncResponse.data.data.token;
-        userData = syncResponse.data.data.user;
-      } else if (syncResponse.data.token) {
-        tokenData = syncResponse.data.token;
-        userData = syncResponse.data.user;
-      } else {
-        console.error('❌ Invalid sync response format:', syncResponse.data);
-        throw new Error('Invalid sync response format');
-      }
-
-      // Validate token before saving
-      if (!tokenData || tokenData === 'undefined' || typeof tokenData !== 'string') {
-        console.error('❌ Invalid token received:', tokenData);
-        throw new Error('Invalid token received from backend');
-      }
-
-      console.log('✅ Saving backend token to cookie (length:', tokenData.length, ')');
-      Cookies.set('auth_token', tokenData, { expires: 7 });
-
+    // If Supabase requires email confirmation, there may be no session yet
+    if (!accessToken) {
       return {
         success: true,
-        data: {
-          token: tokenData,
-          user: userData,
-        },
-        message: 'Account created successfully',
-      };
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError<ApiErrorResponse>;
-      console.error('❌ Supabase Signup Error:', error);
-
-      return {
-        success: false,
         data: { user: {} as User, token: '' },
-        error: axiosError.response?.data?.message
-          || axiosError.response?.data?.error
-          || (error as Error).message
-          || 'Signup failed',
+        message: 'Please check your email to confirm your account',
       };
     }
-  },
+
+    console.log('✅ Supabase signup successful');
+
+    // 2️⃣ Sync with backend (backend sets HttpOnly auth_token cookie)
+    const syncResponse = await apiClient.post(
+      '/auth/sync',
+      {
+        userType,
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Supabase-Token': accessToken,
+        },
+      }
+    );
+
+    console.log('📥 Backend Sync Response:', syncResponse.data);
+
+    // 3️⃣ Extract user only
+    let userData: User;
+
+    if (syncResponse.data?.data?.user) {
+      userData = syncResponse.data.data.user;
+    } else if (syncResponse.data?.user) {
+      userData = syncResponse.data.user;
+    } else {
+      console.error('❌ Invalid sync response format:', syncResponse.data);
+      throw new Error('Invalid sync response format: missing user');
+    }
+
+    return {
+      success: true,
+      data: {
+        token: accessToken,
+        user: userData,
+      },
+      message: 'Account created successfully',
+    };
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    console.error('❌ Supabase Signup Error:', error);
+
+    return {
+      success: false,
+      data: { user: {} as User, token: '' },
+      error:
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.error ||
+        (error as Error).message ||
+        'Signup failed',
+    };
+  }
+},
+
 
   // Login (Legacy method - kept for backward compatibility)
   login: async (
