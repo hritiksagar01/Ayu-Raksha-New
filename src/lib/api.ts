@@ -172,7 +172,7 @@ export const authApi = {
 
       // Step 2: Sync with backend using access token (send in Authorization header)
       const syncResponse = await apiClient.post(
-        '/api/auth/sync',
+        '/auth/sync',
         {
           userType: userType,
           email: credentials.email,
@@ -283,7 +283,7 @@ export const authApi = {
 
       // Step 2: Sync with backend (send access token in Authorization header)
       const syncResponse = await apiClient.post(
-        '/api/auth/sync',
+        '/auth/sync',
         {
           userType: userType,
           email: data.email,
