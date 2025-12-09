@@ -36,7 +36,7 @@ apiClient.interceptors.request.use((config) => {
   const hasExplicitAuth = !!config.headers?.Authorization;
   if (!hasExplicitAuth) {
     const token = Cookies.get('auth_token');
-    if (token) {
+    if (token && token !== 'undefined') {
       if (!config.headers) config.headers = {} as any;
       (config.headers as any).Authorization = `Bearer ${token}`;
     }
@@ -198,9 +198,17 @@ export const authApi = {
         tokenData = syncResponse.data.token;
         userData = syncResponse.data.user;
       } else {
+        console.error('❌ Invalid sync response format:', syncResponse.data);
         throw new Error('Invalid sync response format');
       }
 
+      // Validate token before saving
+      if (!tokenData || tokenData === 'undefined' || typeof tokenData !== 'string') {
+        console.error('❌ Invalid token received:', tokenData);
+        throw new Error('Invalid token received from backend');
+      }
+
+      console.log('✅ Saving backend token to cookie (length:', tokenData.length, ')');
       // Save backend token
       Cookies.set('auth_token', tokenData, { expires: 7 });
 
@@ -304,9 +312,17 @@ export const authApi = {
         tokenData = syncResponse.data.token;
         userData = syncResponse.data.user;
       } else {
+        console.error('❌ Invalid sync response format:', syncResponse.data);
         throw new Error('Invalid sync response format');
       }
 
+      // Validate token before saving
+      if (!tokenData || tokenData === 'undefined' || typeof tokenData !== 'string') {
+        console.error('❌ Invalid token received:', tokenData);
+        throw new Error('Invalid token received from backend');
+      }
+
+      console.log('✅ Saving backend token to cookie (length:', tokenData.length, ')');
       Cookies.set('auth_token', tokenData, { expires: 7 });
 
       return {
