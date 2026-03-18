@@ -10,10 +10,10 @@ export const translations = {
     English: 'Processing...',
     Hindi: 'प्रसंस्करण...',
   },
-  
+
   // Hero Section
   welcomeText: {
-    English: 'Welcome to Ayu Rakshaa',
+    English: 'Welcomeeee to Ayu Rakshaa',
     Hindi: 'आयु रक्षा में आपका स्वागत है',
   },
   tagline: {
@@ -477,12 +477,12 @@ export const translations = {
     English: 'Patient',
     Hindi: 'रोगी',
   },
- 
+
   goBack: {
     English: 'Go Back',
     Hindi: 'वापस जाएं',
   },
-   loginToAccount: {
+  loginToAccount: {
     English: 'Login to your account',
     Hindi: 'अपने खाते में लॉगिन करें',
   },
@@ -506,7 +506,7 @@ export const translations = {
     English: 'Forgot password?',
     Hindi: 'पासवर्ड भूल गए?',
   },
- 
+
   loggingIn: {
     English: 'Logging in...',
     Hindi: 'लॉग इन हो रहा है...',
@@ -519,7 +519,7 @@ export const translations = {
     English: "Don't have an account?",
     Hindi: 'खाता नहीं है?',
   },
-  
+
   loginSuccess: {
     English: 'Login successful!',
     Hindi: 'लॉगिन सफल रहा!',
@@ -528,7 +528,7 @@ export const translations = {
     English: 'Invalid username or password',
     Hindi: 'अमान्य उपयोगकर्ता नाम या पासवर्ड',
   },
-  
+
   // Uploader Portal Translations
   uploaderLoginDescription: {
     English: 'Access the medical records upload system',
@@ -590,7 +590,7 @@ export const translations = {
     English: 'I accept the',
     Hindi: 'मैं स्वीकार करता हूं',
   },
-  
+
   // Uploader Dashboard
   uploaderWelcome: {
     English: 'Welcome',
@@ -688,7 +688,7 @@ export const translations = {
     English: 'View All Uploads',
     Hindi: 'सभी अपलोड देखें',
   },
-  
+
   // Upload Page Translations
   uploadMedicalDocument: {
     English: 'Upload Medical Document',
@@ -874,7 +874,7 @@ export const translations = {
     English: 'Error verifying patient. Please try again.',
     Hindi: 'रोगी सत्यापित करने में त्रुटि। कृपया पुनः प्रयास करें।',
   },
-  
+
   // Upload History Page
   viewAllUploadedDocuments: {
     English: 'View all uploaded medical documents and their status',
@@ -940,6 +940,6 @@ export const translations = {
     English: 'No documents found matching your search',
     Hindi: 'आपकी खोज से मेल खाने वाले कोई दस्तावेज़ नहीं मिले',
   },
- 
+
 };
-    
+
